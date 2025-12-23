@@ -1,0 +1,28 @@
+{
+  "OverallSnowConditions": "Early Season",
+  "OvernightSnowfall": {
+    "Inches": "0",
+    "Centimeters": "0"
+  },
+  "TwentyFourHourSnowfall": {
+    "Inches": "0",
+    "Centimeters": "0"
+  },
+  "FortyEightHourSnowfall": {
+    "Inches": "0",
+    "Centimeters": "0"
+  },
+  "SevenDaySnowfall": {
+    "Inches": "1",
+    "Centimeters": "2"
+  },
+  "BaseDepth": {
+    "Inches": "18",
+    "Centimeters": "45"
+  },
+  "CurrentSeason": {
+    "Inches": "41",
+    "Centimeters": "104"
+  },
+  "LastUpdatedText": "Updated December 23, 2025 at 4:48 AM MST"
+}

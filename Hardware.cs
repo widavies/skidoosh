@@ -5,12 +5,10 @@ namespace skidoosh;
 /// <summary>
 /// Calls C FFI for controlling the PI functions
 /// </summary>
-public static partial class Hardware {
+public partial class Hardware(float brightness = 0.1f) {
     private const int NUM_LEDS = 16;
 
-    private static int _cleanupOnce;
-
-    public const float Brightness = 0.1f;
+    private int _cleanupOnce;
 
     private static CancellationTokenSource? _cts;
 
@@ -22,16 +20,19 @@ public static partial class Hardware {
     /// the loading animation to indicate that the C# program is now
     /// working again.
     /// </summary>
-    public static void Init() {
+    public virtual async Task Init() {
         init();
         SetLEDs([]);
-        SetLCDS();
+        ClearLCDs();
+        await SetLEDsLoading(true);
+
+        Console.WriteLine("Hardware initialized.");
     }
 
     /// <summary>
     /// Draw random sparkles - useful for a loading animation
     /// </summary>
-    public static async Task SetLoading(bool on) {
+    public virtual async Task SetLEDsLoading(bool on) {
         if(_cts != null) {
             await _cts.CancelAsync();
             _cts.Dispose();
@@ -71,7 +72,7 @@ public static partial class Hardware {
                     }
 
                     if(!_cts.IsCancellationRequested) {
-                        UpdateLedsWithBrightness(encoded, encoded.Length);
+                        UpdateLEDsWithBrightness(encoded, encoded.Length);
                     }
 
                     await Task.Delay(400, _cts.Token);
@@ -94,7 +95,7 @@ public static partial class Hardware {
     /// </summary>
     /// <param name="colors">The desired color state for each LED. Pass the empty array to
     /// set all to OFF.</param>
-    public static void SetLEDs(Color[] colors) {
+    public virtual void SetLEDs(Color[] colors) {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(colors.Length, 16);
 
         int[] encoded = new int[NUM_LEDS];
@@ -103,16 +104,21 @@ public static partial class Hardware {
             encoded[i] = colors[i].g << 16 | colors[i].r << 8 | colors[i].b;
         }
 
-        UpdateLedsWithBrightness(encoded, encoded.Length);
+        UpdateLEDsWithBrightness(encoded, encoded.Length);
     }
 
     /// <summary>
     /// Write to the LCDs
     /// </summary>
-    public static void SetLCDS(double? snow24Hr = null, double? snowTomorrow = null, double? currentTemp = null) {
-        updateForecast(snowTomorrow.HasValue ? $"{snowTomorrow.Value:0.#}" : "--", "Tomorrow", "in");
-        updateSnow(snow24Hr.HasValue ? $"{snow24Hr.Value:0.#}" : "--", "Snow 24 hr", "in");
-        updateTemperature(currentTemp.HasValue ? $"{currentTemp.Value:0.#}" : "--", "Today", (byte) 'f');
+    public virtual void SetLCDs(string pastSnowLabel, string pastSnowValue, string futureSnowLabel, string futureSnowValue,
+        string currentTempLabel, string currentTempValue) {
+        updateForecast(pastSnowValue, pastSnowLabel, "in");
+        updateSnow(futureSnowValue, futureSnowLabel, "in");
+        updateTemperature(currentTempValue, currentTempLabel, (byte) 'f');
+    }
+
+    public virtual void ClearLCDs() {
+        SetLCDs("Snow 24 hr", "--", "Tonight", "--", "Base", "--");
     }
 
     /// <summary>
@@ -121,7 +127,7 @@ public static partial class Hardware {
     /// terminated and is no longer updating the LEDs instead of leaving
     /// them in a stale state.
     /// </summary>
-    public static void Shutdown() {
+    public void Shutdown() {
         if(Interlocked.Exchange(ref _cleanupOnce, 1) != 0)
             return;
 
@@ -129,7 +135,7 @@ public static partial class Hardware {
         _cts?.Dispose();
         _cts = null;
         SetLEDs([]);
-        SetLCDS();
+        ClearLCDs();
     }
 
     //
@@ -152,8 +158,8 @@ public static partial class Hardware {
     [LibraryImport("libskidoosh", StringMarshalling = StringMarshalling.Utf8)]
     private static partial int updateForecast(string snowTotal, string label, string unitOfMeasure);
 
-    private static void UpdateLedsWithBrightness(int[] data, int length) {
-        float b = Math.Clamp(Brightness, 0f, 1f);
+    private void UpdateLEDsWithBrightness(int[] data, int length) {
+        float b = Math.Clamp(brightness, 0f, 1f);
         for(int i = 0; i < length; i++) {
             int g = (data[i] >> 16) & 0xFF;
             int r = (data[i] >> 8) & 0xFF;
@@ -168,10 +174,42 @@ public static partial class Hardware {
     }
 }
 
-public struct Color(byte r, byte g, byte b) {
+public class FakeHardware : Hardware {
+    public override Task Init() {
+        Console.WriteLine("FAKE: Init()");
+        return Task.CompletedTask;
+    }
+
+    public override Task SetLEDsLoading(bool on) {
+        Console.WriteLine($"FAKE: SetLoading({on})");
+        return Task.CompletedTask;
+    }
+
+    public override void SetLEDs(Color[] colors) {
+        Console.WriteLine($"FAKE: SetLEDs({colors})");
+    }
+
+    public override void SetLCDs(string pastSnowLabel, string pastSnowValue, string futureSnowLabel, string futureSnowValue, string currentTempLabel,
+        string currentTempValue) {
+        Console.WriteLine("---- Screen ---- ");
+        Console.WriteLine($"{pastSnowLabel}: {pastSnowValue} in");
+        Console.WriteLine($"{futureSnowLabel}: {futureSnowValue} in");
+        Console.WriteLine($"{currentTempLabel}: {currentTempValue} F");
+    }
+
+    public override void ClearLCDs() {
+        Console.WriteLine("---- Screen ---- ");
+        Console.WriteLine("Snow 24 hr: -- in");
+        Console.WriteLine("Tomorrow: -- in");
+        Console.WriteLine("Today: -- F");
+    }
+}
+
+public readonly struct Color(byte r, byte g, byte b) {
     public readonly byte r = r;
     public readonly byte g = g;
     public readonly byte b = b;
+    public bool IsOff => r == 0 && g == 0 && b == 0;
 
     public static readonly Color Red = new(0xFF, 00, 00);
     public static readonly Color Blue = new(0x00, 00, 0xFF);
