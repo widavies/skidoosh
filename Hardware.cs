@@ -25,6 +25,7 @@ public static partial class Hardware {
     public static void Init() {
         init();
         SetLEDs([]);
+        SetLCDS();
     }
 
     /// <summary>
@@ -36,8 +37,6 @@ public static partial class Hardware {
             _cts.Dispose();
             _cts = null;
         }
-
-        SetLEDs([]);
 
         // Start a background job that continuously updates
         // the LEDs
@@ -107,10 +106,13 @@ public static partial class Hardware {
         UpdateLedsWithBrightness(encoded, encoded.Length);
     }
 
-    public static void SetLCDS() {
-        updateForecast("1", "1", "1");
-        updateSnow("2", "2", "2");
-        updateTemperature("2", "2", (byte) 'c');
+    /// <summary>
+    /// Write to the LCDs
+    /// </summary>
+    public static void SetLCDS(double? snow24Hr = null, double? snowTomorrow = null, double? currentTemp = null) {
+        updateForecast(snowTomorrow.HasValue ? $"{snowTomorrow.Value:0.#}" : "--", "Tomorrow", "in");
+        updateSnow(snow24Hr.HasValue ? $"{snow24Hr.Value:0.#}" : "--", "Snow 24 hr", "in");
+        updateTemperature(currentTemp.HasValue ? $"{currentTemp.Value:0.#}" : "--", "Today", (byte) 'f');
     }
 
     /// <summary>
@@ -127,6 +129,7 @@ public static partial class Hardware {
         _cts?.Dispose();
         _cts = null;
         SetLEDs([]);
+        SetLCDS();
     }
 
     //

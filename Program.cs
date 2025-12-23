@@ -23,7 +23,6 @@ while(true) {
         case StateMachine.Init:
             Hardware.Init();
             await Hardware.SetLoading(true);
-            Hardware.SetLCDS();
 
             Console.WriteLine("Hardware initialized.");
 
@@ -74,7 +73,12 @@ while(true) {
                 }
 
                 await Hardware.SetLoading(false);
+
                 Hardware.SetLEDs(colors);
+
+                var report = await PullWeatherReport();
+
+                Hardware.SetLCDS(report.Snow24Hr, report.SnowTomorrow, report.CurrentTemp);
                 state = StateMachine.Idle;
             } catch(Exception e) {
                 Console.Error.WriteLine(e);
@@ -92,6 +96,8 @@ while(true) {
             errors++;
 
             if(errors >= freshness) {
+                Hardware.SetLCDS();
+                Hardware.SetLEDs([]);
                 await Hardware.SetLoading(true);
             }
 
@@ -130,17 +136,53 @@ static async Task<Dictionary<string, string>> PullLiftStatuses() {
 }
 
 // Pulls the weather status from breck website, throws an exception if it fails
-static async Task<Dictionary<string, dynamic>> PullWeatherReport() {
-    HttpClient client = new HttpClient();
+static async Task<WeatherReport> PullWeatherReport() {
+    using HttpClient client = new HttpClient();
+    client.DefaultRequestHeaders.Add("User-Agent", "curl/8.16.0");
+    client.DefaultRequestHeaders.Add("Accept", "*/*");
     var response = await client.GetAsync("https://www.breckenridge.com/api/PageApi/GetWeatherDataForHeader");
 
-    if(response.IsSuccessStatusCode) {
-        var result = JsonSerializer.Deserialize<Dictionary<string, dynamic>>(await response.Content.ReadAsStringAsync());
+    if(!response.IsSuccessStatusCode) {
+        string body;
+        try {
+            body = await response.Content.ReadAsStringAsync();
+        } catch {
+            body = "";
+        }
 
-        return result;
+        throw new Exception($"Breck API: {response.StatusCode}: {body}");
     }
 
-    throw new Exception(await response.Content.ReadAsStringAsync());
+    var result = JsonSerializer.Deserialize<JsonObject>(await response.Content.ReadAsStringAsync());
+
+    double? currentTemp = null;
+    double? snow24Hr = null;
+
+    // Try parse current temperature
+    try {
+        currentTemp = result?["CurrentTempStandard"].Deserialize<double?>();
+    } catch(Exception e) {
+        Console.Error.WriteLine("Failed to parse current temp: " + e);
+    }
+
+    // Try parse current snow fall
+    try {
+        string? inchesStr = result?["SnowReportSections"].Deserialize<SnowReportSection[]>()
+            ?.FirstOrDefault(v => v.Description == "24 Hour<br/>Snowfall")
+            ?.Depth.Inches;
+
+        if(double.TryParse(inchesStr, out double parsed)) {
+            snow24Hr = parsed;
+        }
+    } catch(Exception e) {
+        Console.Error.WriteLine("Failed to parse inches: " + e);
+    }
+
+    return new WeatherReport {
+        CurrentTemp = currentTemp,
+        Snow24Hr = snow24Hr,
+        SnowTomorrow = null
+    };
 }
 
 internal enum StateMachine {
@@ -163,3 +205,18 @@ internal enum StateMachine {
     // Do nothing for timeout period
     Error
 };
+
+internal struct WeatherReport {
+    public required double? CurrentTemp;
+    public required double? Snow24Hr;
+    public required double? SnowTomorrow;
+}
+
+internal class SnowReportSection {
+    public required SnowReportDepth Depth { get; set; }
+    public required string Description { get; set; }
+}
+
+internal class SnowReportDepth {
+    public required string Inches { get; set; }
+}
