@@ -33,3 +33,6 @@ Todo:
   Error message: Could not load file or assembly '/home/cci/System.Private.CoreLib.dll'. The module was expected to contain an assembly manifest. (0x80131018)
   Failed to create CoreCLR, HRESULT: 0x80131018
 ```
+
+- Failure mode needs to be a bit better
+  PS D:\skidoosh> dotnet publish skidoosh.csproj --runtime linux-arm64 --configuration Release --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true  -o dist 

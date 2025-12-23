@@ -16,7 +16,7 @@ const int freshness = 5;
 const int backoff = 5000;
 
 // The number of times we've failed to update in a row.
-int errors = int.MaxValue;
+int errors = 0;
 
 while(true) {
     switch(state) {
@@ -76,9 +76,14 @@ while(true) {
 
                 Hardware.SetLEDs(colors);
 
-                var report = await PullWeatherReport();
+                try {
+                    var report = await PullWeatherReport();
 
-                Hardware.SetLCDS(report.Snow24Hr, report.SnowTomorrow, report.CurrentTemp);
+                    Hardware.SetLCDS(report.Snow24Hr, report.SnowTomorrow, report.CurrentTemp);
+                } catch(Exception) {
+                    // TODO, not super reliable right now, so just do it like this
+                    Hardware.SetLCDS();
+                }
                 state = StateMachine.Idle;
             } catch(Exception e) {
                 Console.Error.WriteLine(e);
