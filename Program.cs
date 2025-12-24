@@ -4,7 +4,7 @@ using skidoosh;
 
 StateMachine state = StateMachine.UpdateWeather;
 
-Hardware hardware = new FakeHardware();
+Hardware hardware = new Hardware();
 
 await hardware.Init();
 
@@ -27,23 +27,22 @@ AppDomain.CurrentDomain.ProcessExit += (_, _) => { hardware.Shutdown(); };
 // Wait for a ping to complete, this will let it start up faster
 // otherwise the network request may immediately fail, causing us to wait a full minute
 // before trying again.
-IPStatus pingStatus = IPStatus.Unknown;
-
-while(pingStatus != IPStatus.Success) {
-    try {
-        using Ping myPing = new Ping();
-        byte[] buffer = new byte[32];
-        const int timeout = 1000;
-        PingReply reply = myPing.Send("google.com", timeout, buffer);
-        pingStatus = reply.Status;
-    } catch(Exception e) {
-        Console.Error.WriteLine($"Error: {e}");
-    }
-
-    await Task.Delay(2000);
-}
-
-Console.WriteLine("Ping succeeded");
+// IPStatus pingStatus = IPStatus.Unknown;
+//
+// while(pingStatus != IPStatus.Success) {
+//     try {
+//         using Ping myPing = new Ping();
+//         const int timeout = 1000;
+//         PingReply reply = myPing.Send("google.com", timeout);
+//         pingStatus = reply.Status;
+//     } catch(Exception e) {
+//         Console.Error.WriteLine($"Error: {e}");
+//     }
+//
+//     await Task.Delay(2000);
+// }
+//
+// Console.WriteLine("Ping succeeded");
 
 int consecutiveLiftReportErrors = 0;
 int consecutiveWeatherReportErrors = 0;
@@ -141,7 +140,7 @@ while(true) {
             break;
         case StateMachine.WriteWeatherScreen1:
             if(report != null) {
-                hardware.SetLCDs("Snow overnight", report.SnowOvernight ?? "--", "Tonight", report.SnowTonight ?? "--",
+                hardware.SetLCDs("Overnight", report.SnowOvernight ?? "--", "Tonight", report.SnowTonight ?? "--",
                     "Base", report.BaseTemperature.HasValue ? $"{report.BaseTemperature:0.#}" : "--");
             }
 
@@ -190,7 +189,6 @@ while(true) {
             throw new Exception("Failed to read ");
     }
 }
-
 
 internal enum StateMachine {
     UpdateLiftStatus,

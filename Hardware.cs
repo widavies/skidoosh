@@ -112,9 +112,9 @@ public partial class Hardware(float brightness = 0.1f) {
     /// </summary>
     public virtual void SetLCDs(string pastSnowLabel, string pastSnowValue, string futureSnowLabel, string futureSnowValue,
         string currentTempLabel, string currentTempValue) {
-        updateForecast(pastSnowValue, pastSnowLabel, "in");
-        updateSnow(futureSnowValue, futureSnowLabel, "in");
-        updateTemperature(currentTempValue, currentTempLabel, (byte) 'f');
+        updateForecast(parseRange(pastSnowValue), pastSnowLabel, "in");
+        updateSnow(parseRange(futureSnowValue), futureSnowLabel, "in");
+        updateTemperature(parseRange(currentTempValue), currentTempLabel, (byte) 'f');
     }
 
     public virtual void ClearLCDs() {
@@ -136,6 +136,16 @@ public partial class Hardware(float brightness = 0.1f) {
         _cts = null;
         SetLEDs([]);
         ClearLCDs();
+    }
+
+    private static string parseRange(string input) {
+        string[] tokens = input.Split('-');
+
+        return tokens.Length switch {
+            0 => "",
+            1 => tokens.First(),
+            _ => tokens.First() + "+"
+        };
     }
 
     //
