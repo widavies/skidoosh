@@ -72,9 +72,9 @@ public partial class WeatherReport {
 
             Task<HttpResponseMessage>[] fetchTasks = [
                 client.GetAsync("https://www.breckenridge.com/the-mountain/mountain-conditions/snow-and-weather-report.aspx"),
-                client.GetAsync("https://api.weather.gov/stations/E8345/observations/latest"),
-                client.GetAsync("https://api.weather.gov/stations/CAHSB/observations/latest"),
-                client.GetAsync("https://api.weather.gov/stations/CABP6/observations/latest")
+                client.GetAsync("https://api.weather.gov/stations/E8345/observations"),
+                client.GetAsync("https://api.weather.gov/stations/CAHSB/observations"),
+                client.GetAsync("https://api.weather.gov/stations/CABP6/observations")
             ];
 
             try {
@@ -171,7 +171,7 @@ public partial class WeatherReport {
                 string json = await taskWeatherBase.Result.Content.ReadAsStringAsync();
                 var weatherReport = JsonSerializer.Deserialize<WeatherStation>(json, opts);
 
-                report.BaseTemperature = weatherReport?.Properties?.Temperature?.ToDegF();
+                report.BaseTemperature = weatherReport?.Features.FirstOrDefault(x => x.Properties?.Temperature != null)?.Properties?.Temperature?.ToDegF();
             } catch(Exception e) {
                 await Console.Error.WriteLineAsync("Base weather report: Error - " + e);
             }
@@ -198,7 +198,7 @@ public partial class WeatherReport {
                 string json = await taskWeatherMid.Result.Content.ReadAsStringAsync();
                 var weatherReport = JsonSerializer.Deserialize<WeatherStation>(json, opts);
 
-                report.MidTemperature = weatherReport?.Properties?.Temperature?.ToDegF();
+                report.MidTemperature = weatherReport?.Features.FirstOrDefault(x => x.Properties?.Temperature != null)?.Properties?.Temperature?.ToDegF();
             } catch(Exception e) {
                 await Console.Error.WriteLineAsync("Mid weather report: Error - " + e);
             }
@@ -226,7 +226,7 @@ public partial class WeatherReport {
                 string json = await taskWeatherSummit.Result.Content.ReadAsStringAsync();
                 var weatherReport = JsonSerializer.Deserialize<WeatherStation>(json, opts);
 
-                report.SummitTemperature = weatherReport?.Properties?.Temperature?.ToDegF();
+                report.SummitTemperature = weatherReport?.Features.FirstOrDefault(x => x.Properties?.Temperature != null)?.Properties?.Temperature?.ToDegF();
             } catch(Exception e) {
                 await Console.Error.WriteLineAsync("Summit weather report: Error - " + e);
             }
@@ -255,6 +255,11 @@ public partial class WeatherReport {
 
     [GeneratedRegex(@"(?<=FR.forecasts\s+=\s+)(.*);")]
     private static partial Regex ForecastRegex();
+
+    public override string ToString() {
+        return
+            $"{nameof(SnowTonight)}: {SnowTonight}, {nameof(SnowTomorrow)}: {SnowTomorrow}, {nameof(SnowOvernight)}: {SnowOvernight}, {nameof(Snow24Hr)}: {Snow24Hr}, {nameof(Snow48Hr)}: {Snow48Hr}, {nameof(Snow7Days)}: {Snow7Days}, {nameof(BaseTemperature)}: {BaseTemperature}, {nameof(MidTemperature)}: {MidTemperature}, {nameof(SummitTemperature)}: {SummitTemperature}";
+    }
 }
 
 // Minimum helper classes for JSON deserialization
@@ -285,6 +290,11 @@ internal class SnowReportDepth {
 
 [UsedImplicitly(ImplicitUseTargetFlags.Members)]
 internal class WeatherStation {
+    public WeatherStationFeature[] Features { get; init; }
+}
+
+[UsedImplicitly(ImplicitUseTargetFlags.Members)]
+internal class WeatherStationFeature {
     public WeatherStationProperty? Properties { get; init; }
 }
 

@@ -27,22 +27,22 @@ AppDomain.CurrentDomain.ProcessExit += (_, _) => { hardware.Shutdown(); };
 // Wait for a ping to complete, this will let it start up faster
 // otherwise the network request may immediately fail, causing us to wait a full minute
 // before trying again.
-// IPStatus pingStatus = IPStatus.Unknown;
-//
-// while(pingStatus != IPStatus.Success) {
-//     try {
-//         using Ping myPing = new Ping();
-//         const int timeout = 1000;
-//         PingReply reply = myPing.Send("google.com", timeout);
-//         pingStatus = reply.Status;
-//     } catch(Exception e) {
-//         Console.Error.WriteLine($"Error: {e}");
-//     }
-//
-//     await Task.Delay(2000);
-// }
-//
-// Console.WriteLine("Ping succeeded");
+IPStatus pingStatus = IPStatus.Unknown;
+
+while(pingStatus != IPStatus.Success) {
+    try {
+        using Ping myPing = new Ping();
+        const int timeout = 1000;
+        PingReply reply = myPing.Send("google.com", timeout);
+        pingStatus = reply.Status;
+    } catch(Exception e) {
+        Console.Error.WriteLine($"Error: {e}");
+    }
+
+    await Task.Delay(2000);
+}
+
+Console.WriteLine("Network online");
 
 int consecutiveLiftReportErrors = 0;
 int consecutiveWeatherReportErrors = 0;
@@ -120,6 +120,9 @@ while(true) {
 
             WeatherReport? latest = await WeatherReport.GetLatestWeatherReport();
 
+            Console.WriteLine("--- Weather report ---");
+            Console.WriteLine(latest);
+
             // Success
             if(latest != null) {
                 consecutiveWeatherReportErrors = 0;
@@ -140,8 +143,8 @@ while(true) {
             break;
         case StateMachine.WriteWeatherScreen1:
             if(report != null) {
-                hardware.SetLCDs("Overnight", report.SnowOvernight ?? "--", "Tonight", report.SnowTonight ?? "--",
-                    "Base", report.BaseTemperature.HasValue ? $"{report.BaseTemperature:0.#}" : "--");
+                hardware.SetLCDs("Overnight", report.SnowOvernight, "Tonight", report.SnowTonight,
+                    "Base", report.BaseTemperature);
             }
 
             await Task.Delay(12000);
@@ -150,8 +153,8 @@ while(true) {
             break;
         case StateMachine.WriteWeatherScreen2:
             if(report != null) {
-                hardware.SetLCDs("Snow 24 hr", report.Snow24Hr ?? "--", "Tomorrow", report.SnowTomorrow ?? "--",
-                    "Mid", report.MidTemperature.HasValue ? $"{report.MidTemperature:0.#}" : "--");
+                hardware.SetLCDs("Snow 24 hr", report.Snow24Hr, "Tomorrow", report.SnowTomorrow,
+                    "Mid", report.MidTemperature);
             }
 
             await Task.Delay(12000);
@@ -159,8 +162,8 @@ while(true) {
             break;
         case StateMachine.WriteWeatherScreen3:
             if(report != null) {
-                hardware.SetLCDs("Snow 48 hr", report.Snow48Hr ?? "--", "Tonight", report.SnowTonight ?? "--",
-                    "Summit", report.SummitTemperature.HasValue ? $"{report.SummitTemperature:0.#}" : "--");
+                hardware.SetLCDs("Snow 48 hr", report.Snow48Hr, "Tonight", report.SnowTonight,
+                    "Summit", report.SummitTemperature);
             }
 
             await Task.Delay(12000);
@@ -168,8 +171,8 @@ while(true) {
             break;
         case StateMachine.WriteWeatherScreen4:
             if(report != null) {
-                hardware.SetLCDs("Snow 7 day", report.Snow7Days ?? "--", "Tomorrow", report.SnowTomorrow ?? "--",
-                    "Mid", report.MidTemperature.HasValue ? $"{report.MidTemperature:0.#}" : "--");
+                hardware.SetLCDs("Snow 7 day", report.Snow7Days, "Tomorrow", report.SnowTomorrow,
+                    "Mid", report.MidTemperature);
             }
 
             await Task.Delay(12000);

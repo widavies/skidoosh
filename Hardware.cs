@@ -110,15 +110,39 @@ public partial class Hardware(float brightness = 0.1f) {
     /// <summary>
     /// Write to the LCDs
     /// </summary>
-    public virtual void SetLCDs(string pastSnowLabel, string pastSnowValue, string futureSnowLabel, string futureSnowValue,
-        string currentTempLabel, string currentTempValue) {
-        updateForecast(parseRange(pastSnowValue), pastSnowLabel, "in");
-        updateSnow(parseRange(futureSnowValue), futureSnowLabel, "in");
-        updateTemperature(parseRange(currentTempValue), currentTempLabel, (byte) 'f');
+    public virtual void SetLCDs(string pastSnowLabel, string? pastSnowValue, string futureSnowLabel, string? futureSnowValue,
+        string currentTempLabel, double? currentTempValue) {
+
+        updateForecast(convertRange(pastSnowValue), pastSnowLabel, "in");
+        updateSnow(convertRange(futureSnowValue), futureSnowLabel, "in");
+        updateTemperature(convertTemp(currentTempValue), currentTempLabel, (byte) 'f');
     }
 
+    // This will try to keep values
+    private static string convertRange(string? input) {
+        if(input == null) return "--";
+
+        string[] tokens = input.Split('-');
+
+        return tokens.Length switch {
+            0 => "",
+            1 => tokens.First(),
+            _ => tokens.First() + "+"
+        };
+    }
+
+    private static string convertTemp(double? input) {
+        return input switch {
+            null => "--",
+            // If number is negative or 3 digits, only room for 3 characters
+            < 0 => $"{input:#}",
+            _ => Math.Round(input.Value) >= 100 ? $"{input:#}" : $"{input:0.#}"
+        };
+    }
+
+
     public virtual void ClearLCDs() {
-        SetLCDs("Snow 24 hr", "--", "Tonight", "--", "Base", "--");
+        SetLCDs("Snow 24 hr", null, "Tonight", null, "Base", null);
     }
 
     /// <summary>
@@ -131,21 +155,11 @@ public partial class Hardware(float brightness = 0.1f) {
         if(Interlocked.Exchange(ref _cleanupOnce, 1) != 0)
             return;
 
-        Console.WriteLine("SHUTDOWN");
+        Console.WriteLine("\nSHUTDOWN\n");
         _cts?.Dispose();
         _cts = null;
         SetLEDs([]);
         ClearLCDs();
-    }
-
-    private static string parseRange(string input) {
-        string[] tokens = input.Split('-');
-
-        return tokens.Length switch {
-            0 => "",
-            1 => tokens.First(),
-            _ => tokens.First() + "+"
-        };
     }
 
     //
@@ -199,8 +213,8 @@ public class FakeHardware : Hardware {
         Console.WriteLine($"FAKE: SetLEDs({colors})");
     }
 
-    public override void SetLCDs(string pastSnowLabel, string pastSnowValue, string futureSnowLabel, string futureSnowValue, string currentTempLabel,
-        string currentTempValue) {
+    public override void SetLCDs(string pastSnowLabel, string? pastSnowValue, string futureSnowLabel, string? futureSnowValue, string currentTempLabel,
+        double? currentTempValue) {
         Console.WriteLine("---- Screen ---- ");
         Console.WriteLine($"{pastSnowLabel}: {pastSnowValue} in");
         Console.WriteLine($"{futureSnowLabel}: {futureSnowValue} in");
