@@ -171,7 +171,7 @@ public partial class WeatherReport {
                 string json = await taskWeatherBase.Result.Content.ReadAsStringAsync();
                 var weatherReport = JsonSerializer.Deserialize<WeatherStation>(json, opts);
 
-                report.BaseTemperature = weatherReport?.Features.FirstOrDefault(x => x.Properties?.Temperature != null)?.Properties?.Temperature?.ToDegF();
+                report.BaseTemperature = weatherReport?.Features?.FirstOrDefault(x => x.Properties?.Temperature?.Value != null)?.Properties?.Temperature?.ToDegF();
             } catch(Exception e) {
                 await Console.Error.WriteLineAsync("Base weather report: Error - " + e);
             }
@@ -198,7 +198,7 @@ public partial class WeatherReport {
                 string json = await taskWeatherMid.Result.Content.ReadAsStringAsync();
                 var weatherReport = JsonSerializer.Deserialize<WeatherStation>(json, opts);
 
-                report.MidTemperature = weatherReport?.Features.FirstOrDefault(x => x.Properties?.Temperature != null)?.Properties?.Temperature?.ToDegF();
+                report.MidTemperature = weatherReport?.Features?.FirstOrDefault(x => x.Properties?.Temperature?.Value != null)?.Properties?.Temperature?.ToDegF();
             } catch(Exception e) {
                 await Console.Error.WriteLineAsync("Mid weather report: Error - " + e);
             }
@@ -226,7 +226,7 @@ public partial class WeatherReport {
                 string json = await taskWeatherSummit.Result.Content.ReadAsStringAsync();
                 var weatherReport = JsonSerializer.Deserialize<WeatherStation>(json, opts);
 
-                report.SummitTemperature = weatherReport?.Features.FirstOrDefault(x => x.Properties?.Temperature != null)?.Properties?.Temperature?.ToDegF();
+                report.SummitTemperature = weatherReport?.Features?.FirstOrDefault(x => x.Properties?.Temperature?.Value != null)?.Properties?.Temperature?.ToDegF();
             } catch(Exception e) {
                 await Console.Error.WriteLineAsync("Summit weather report: Error - " + e);
             }
@@ -290,7 +290,7 @@ internal class SnowReportDepth {
 
 [UsedImplicitly(ImplicitUseTargetFlags.Members)]
 internal class WeatherStation {
-    public WeatherStationFeature[] Features { get; init; }
+    public WeatherStationFeature[]? Features { get; init; }
 }
 
 [UsedImplicitly(ImplicitUseTargetFlags.Members)]

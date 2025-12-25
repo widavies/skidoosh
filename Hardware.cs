@@ -10,7 +10,7 @@ public partial class Hardware(float brightness = 0.1f) {
 
     private int _cleanupOnce;
 
-    private static CancellationTokenSource? _cts;
+    private CancellationTokenSource? _cts;
 
     /// <summary>
     /// Call immediately when the program starts.
@@ -75,7 +75,7 @@ public partial class Hardware(float brightness = 0.1f) {
                         UpdateLEDsWithBrightness(encoded, encoded.Length);
                     }
 
-                    await Task.Delay(400, _cts.Token);
+                    await Task.Delay(400);
                 }
             }, _cts.Token);
         }
@@ -155,7 +155,7 @@ public partial class Hardware(float brightness = 0.1f) {
         if(Interlocked.Exchange(ref _cleanupOnce, 1) != 0)
             return;
 
-        Console.WriteLine("\nSHUTDOWN\n");
+        _cts?.Cancel();
         _cts?.Dispose();
         _cts = null;
         SetLEDs([]);
