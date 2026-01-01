@@ -29,6 +29,9 @@ AppDomain.CurrentDomain.ProcessExit += (_, _) => { hardware.Shutdown(); };
 // before trying again.
 IPStatus pingStatus = IPStatus.Unknown;
 
+// Only do this for a limited time
+int pingAttempts = 0;
+
 while(pingStatus != IPStatus.Success) {
     try {
         using Ping myPing = new Ping();
@@ -40,9 +43,13 @@ while(pingStatus != IPStatus.Success) {
     }
 
     await Task.Delay(2000);
-}
 
-Console.WriteLine("Network online");
+    pingAttempts++;
+
+    if(pingAttempts > 30) {
+        break;
+    }
+}
 
 int consecutiveLiftReportErrors = 0;
 int consecutiveWeatherReportErrors = 0;
@@ -183,8 +190,10 @@ while(true) {
             if((report == null && loops >= 1) || (report != null && loops >= 10)) {
                 loops = 0;
                 state = StateMachine.UpdateWeather;
-            } else {
+            } else if(loops >= 2) {
                 state = StateMachine.UpdateLiftStatus;
+            } else {
+                state = StateMachine.WriteWeatherScreen1;
             }
 
             break;
