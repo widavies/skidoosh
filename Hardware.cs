@@ -10,6 +10,7 @@ public partial class Hardware(float brightness = 0.1f) {
 
     private int _cleanupOnce;
 
+    private Task? _task;
     private CancellationTokenSource? _cts;
 
     /// <summary>
@@ -35,6 +36,11 @@ public partial class Hardware(float brightness = 0.1f) {
     public virtual async Task SetLEDsLoading(bool on) {
         if(_cts != null) {
             await _cts.CancelAsync();
+            if(_task != null) {
+                await _task;
+                _task = null;
+            }
+
             _cts.Dispose();
             _cts = null;
         }
@@ -43,39 +49,43 @@ public partial class Hardware(float brightness = 0.1f) {
         // the LEDs
         if(on) {
             _cts = new CancellationTokenSource();
-            _ = Task.Run(async () => {
-                Random r = new();
+            _task = Task.Run(async () => {
+                try {
+                    Random r = new();
 
-                bool[] flakesLeft = new bool[NUM_LEDS / 2];
-                bool[] flakesRight = new bool[NUM_LEDS / 2];
+                    bool[] flakesLeft = new bool[NUM_LEDS / 2];
+                    bool[] flakesRight = new bool[NUM_LEDS / 2];
 
-                while(!_cts.IsCancellationRequested) {
-                    // Apply gravity
-                    for(int i = flakesLeft.Length - 1; i > 0; i--) {
-                        flakesLeft[i] = flakesLeft[i - 1];
-                        flakesLeft[i - 1] = false;
+                    while(!_cts.IsCancellationRequested) {
+                        // Apply gravity
+                        for(int i = flakesLeft.Length - 1; i > 0; i--) {
+                            flakesLeft[i] = flakesLeft[i - 1];
+                            flakesLeft[i - 1] = false;
 
-                        flakesRight[i] = flakesRight[i - 1];
-                        flakesRight[i - 1] = false;
+                            flakesRight[i] = flakesRight[i - 1];
+                            flakesRight[i - 1] = false;
+                        }
+
+                        // Spawn new flakes
+                        flakesLeft[0] = r.NextDouble() < 0.5;
+                        flakesRight[0] = r.NextDouble() < 0.5;
+
+                        // Draw the flakes
+                        int[] encoded = new int[NUM_LEDS];
+
+                        for(int i = 0; i < flakesLeft.Length; i++) {
+                            encoded[i + 8] = flakesLeft[i] ? int.MaxValue : 0;
+                            encoded[7 - i] = flakesRight[i] ? int.MaxValue : 0;
+                        }
+
+                        if(!_cts.IsCancellationRequested) {
+                            UpdateLEDsWithBrightness(encoded, encoded.Length);
+                        }
+
+                        await Task.Delay(1000, _cts.Token);
                     }
-
-                    // Spawn new flakes
-                    flakesLeft[0] = r.NextDouble() < 0.5;
-                    flakesRight[0] = r.NextDouble() < 0.5;
-
-                    // Draw the flakes
-                    int[] encoded = new int[NUM_LEDS];
-
-                    for(int i = 0; i < flakesLeft.Length; i++) {
-                        encoded[i + 8] = flakesLeft[i] ? int.MaxValue : 0;
-                        encoded[7 - i] = flakesRight[i] ? int.MaxValue : 0;
-                    }
-
-                    if(!_cts.IsCancellationRequested) {
-                        UpdateLEDsWithBrightness(encoded, encoded.Length);
-                    }
-
-                    await Task.Delay(400);
+                } catch(OperationCanceledException) {
+                    // Don't care
                 }
             }, _cts.Token);
         }
@@ -112,7 +122,6 @@ public partial class Hardware(float brightness = 0.1f) {
     /// </summary>
     public virtual void SetLCDs(string pastSnowLabel, string? pastSnowValue, string futureSnowLabel, string? futureSnowValue,
         string currentTempLabel, double? currentTempValue) {
-
         updateForecast(convertRange(pastSnowValue), pastSnowLabel, "in");
         updateSnow(convertRange(futureSnowValue), futureSnowLabel, "in");
         updateTemperature(convertTemp(currentTempValue), currentTempLabel, (byte) 'f');
