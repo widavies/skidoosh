@@ -184,21 +184,23 @@ while(true) {
 
             await Task.Delay(12000);
 
+            // 1 loop takes 48 seconds
             loops++;
 
+            if(loops == 2) {
+                state = StateMachine.UpdateLiftStatus;
+            }
             // If we don't have weather data, we'll poll more often
-            if((report == null && loops >= 1) || (report != null && loops >= 10)) {
+            else if((report == null && loops >= 4) || (report != null && loops >= 10)) {
                 loops = 0;
                 state = StateMachine.UpdateWeather;
-            } else if(loops >= 2) {
-                state = StateMachine.UpdateLiftStatus;
             } else {
                 state = StateMachine.WriteWeatherScreen1;
             }
 
             break;
         default:
-            throw new Exception("Failed to read ");
+            throw new Exception("Failed to read");
     }
 }
 
