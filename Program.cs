@@ -89,6 +89,9 @@ while(true) {
                 statusToColor("Falcon SuperChair"), // Bottom
             ];
 
+            Console.WriteLine("--- Lift report --- ");
+            Console.WriteLine(string.Join(",", colors));
+            
             // If any colors are set, update
             if(colors.Any(c => !c.IsOff)) {
                 consecutiveLiftReportErrors = 0;

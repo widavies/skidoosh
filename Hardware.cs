@@ -5,7 +5,7 @@ namespace skidoosh;
 /// <summary>
 /// Calls C FFI for controlling the PI functions
 /// </summary>
-public partial class Hardware(float brightness = 0.1f) {
+public partial class Hardware {
     private const int NUM_LEDS = 16;
 
     private int _cleanupOnce;
@@ -192,6 +192,13 @@ public partial class Hardware(float brightness = 0.1f) {
     private static partial int updateForecast(string snowTotal, string label, string unitOfMeasure);
 
     private void UpdateLEDsWithBrightness(int[] data, int length) {
+        int hour = DateTime.Now.Hour;
+        
+        float brightness = 0.01f;
+        if (hour is >= 6 and < 17) {
+            brightness = 1f;
+        }
+        
         float b = Math.Clamp(brightness, 0f, 1f);
         for(int i = 0; i < length; i++) {
             int g = (data[i] >> 16) & 0xFF;
@@ -249,4 +256,13 @@ public readonly struct Color(byte r, byte g, byte b) {
     public static readonly Color Orange = new(255, 165, 00);
     public static readonly Color Green = new(00, 0xFF, 00);
     public static readonly Color Off = new(00, 0, 00);
+
+    public override string ToString() {
+        if (r == Red.r && b == Red.b && g == Red.g) return "Red";
+        if (r == Blue.r && b == Blue.b && g == Blue.g) return "Blue";
+        if (r == Orange.r && b == Orange.b && g == Orange.g) return "Orange";
+        if (r == Green.r && b == Green.b && g == Green.g) return "Green";
+        if (r == Off.r && b == Off.b && g == Off.g) return "Off";
+        return $"Color(R:{r}, G:{g}, B:{b})";
+    }
 }
