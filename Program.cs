@@ -58,6 +58,7 @@ WeatherReport? report = null;
 
 // State machine
 while(true) {
+    Console.WriteLine(state);
     switch(state) {
         case StateMachine.UpdateLiftStatus:
             // If we have been erroring, see if delaying a bit longer will help our plight
@@ -190,14 +191,15 @@ while(true) {
             // 1 loop takes 48 seconds
             loops++;
 
-            if(loops == 2) {
-                state = StateMachine.UpdateLiftStatus;
-            }
             // If we don't have weather data, we'll poll more often
-            else if((report == null && loops >= 4) || (report != null && loops >= 10)) {
+            if((report == null && loops >= 4) || (report != null && loops >= 10)) {
                 loops = 0;
                 state = StateMachine.UpdateWeather;
-            } else {
+            } 
+            else if(loops % 2 == 0) {
+                state = StateMachine.UpdateLiftStatus;
+            } 
+            else {
                 state = StateMachine.WriteWeatherScreen1;
             }
 
