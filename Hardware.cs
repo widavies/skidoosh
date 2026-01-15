@@ -71,15 +71,15 @@ public partial class Hardware {
                         flakesRight[0] = r.NextDouble() < 0.5;
 
                         // Draw the flakes
-                        int[] encoded = new int[NUM_LEDS];
+                        uint[] encoded = new uint[NUM_LEDS];
 
                         for(int i = 0; i < flakesLeft.Length; i++) {
-                            encoded[i + 8] = flakesLeft[i] ? int.MaxValue : 0;
-                            encoded[7 - i] = flakesRight[i] ? int.MaxValue : 0;
+                            encoded[i + 8] = flakesLeft[i] ? uint.MaxValue : 0;
+                            encoded[7 - i] = flakesRight[i] ? uint.MaxValue : 0;
                         }
 
                         if(!_cts.IsCancellationRequested) {
-                            UpdateLEDsWithBrightness(encoded, encoded.Length);
+                            UpdateLEDs(encoded, encoded.Length);
                         }
 
                         await Task.Delay(1000, _cts.Token);
@@ -108,13 +108,13 @@ public partial class Hardware {
     public virtual void SetLEDs(Color[] colors) {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(colors.Length, 16);
 
-        int[] encoded = new int[NUM_LEDS];
+        uint[] encoded = new uint[NUM_LEDS];
 
         for(int i = 0; i < colors.Length; i++) {
-            encoded[i] = colors[i].g << 16 | colors[i].r << 8 | colors[i].b;
+            encoded[i] = (uint) (colors[i].g << 16 | colors[i].r << 8 | colors[i].b);
         }
 
-        UpdateLEDsWithBrightness(encoded, encoded.Length);
+        UpdateLEDs(encoded, encoded.Length);
     }
 
     /// <summary>
@@ -180,7 +180,7 @@ public partial class Hardware {
     private static partial void init();
 
     [LibraryImport("libskidoosh")]
-    private static partial int updateLeds([Out] int[] data, int length);
+    private static partial int updateLeds(uint[] data, int length);
 
     [LibraryImport("libskidoosh", StringMarshalling = StringMarshalling.Utf8)]
     private static partial int updateTemperature(string temp, string label, byte celsiusOrDegrees);
@@ -191,19 +191,19 @@ public partial class Hardware {
     [LibraryImport("libskidoosh", StringMarshalling = StringMarshalling.Utf8)]
     private static partial int updateForecast(string snowTotal, string label, string unitOfMeasure);
 
-    private void UpdateLEDsWithBrightness(int[] data, int length) {
+    private static void UpdateLEDs(uint[] data, int length) {
         int hour = DateTime.Now.Hour;
         
         float brightness = 0.01f;
         if (hour is >= 6 and < 17) {
-            brightness = 1f;
+            brightness = 0.5f;
         }
         
         float b = Math.Clamp(brightness, 0f, 1f);
         for(int i = 0; i < length; i++) {
-            int g = (data[i] >> 16) & 0xFF;
-            int r = (data[i] >> 8) & 0xFF;
-            int bl = data[i] & 0xFF;
+            uint g = (data[i] >> 16) & 0xFF;
+            uint r = (data[i] >> 8) & 0xFF;
+            uint bl = data[i] & 0xFF;
             g = (byte) (g * b);
             r = (byte) (r * b);
             bl = (byte) (bl * b);
