@@ -2,6 +2,13 @@
 using System.Runtime.InteropServices;
 using skidoosh;
 
+// If the command is "skidoosh --version", print the version and exit
+if(args is ["--version"]) {
+    string? version = typeof(Program).Assembly.GetName().Version?.ToString();
+    Console.WriteLine(version ?? "Unknown version");
+    return;
+}
+
 StateMachine state = StateMachine.UpdateWeather;
 
 Hardware hardware = new Hardware();

@@ -13,6 +13,16 @@ fi
 
 echo "Fetching latest release..."
 TAG=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | cut -d'"' -f4)
+
+# Check if the current version is already up to date
+if [ -f "$INSTALL_PATH" ]; then
+    CURRENT_VERSION=$("$INSTALL_PATH" --version | awk '{print $NF}')
+    if [ "$CURRENT_VERSION" == "$TAG" ]; then
+        echo "Already up to date (version $CURRENT_VERSION)."
+        exit 0
+    fi
+fi
+
 echo "Updating to version: $TAG"
 
 DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG/$ASSET_NAME"

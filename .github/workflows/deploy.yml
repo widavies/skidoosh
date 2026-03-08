@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
 
+# Todo: Automatically build and copy the driver static lib as well
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -45,7 +46,7 @@ jobs:
             publish/skidoosh \
             publish/skidoosh.pdb \
             update.sh \
-            --title "${{ github.ref_name }}" \
+            --title "Release ${{ github.ref_name }}" \
             --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

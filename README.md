@@ -12,6 +12,11 @@ Displays:
   - Snow report (snow last night, last 24 hours, last 48 hours, last 7 days)
   - Snow forecast (snow tonight, snow tomorrow)
 
+Update the application:
+```
+curl -sSL https://github.com/widavies/skidoosh/releases/latest/download/update.sh | sudo bash
+```
+
 Hardware drivers (LEDs and LCDs) are implemented in C and linked as a static library:
 
 https://github.com/widavies/skidoosh-driver
@@ -40,7 +45,7 @@ systemctl service enable
 systemctl service start
 ```
 
-## Miscellanous
+## Miscellaneous
 
 The `ExecStartPre` line is added as a Band-Aid fix for the below issue:
 ```
