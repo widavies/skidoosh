@@ -17,7 +17,7 @@ TAG=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_
 # Check if the current version is already up to date
 if [ -f "$INSTALL_PATH" ]; then
     CURRENT_VERSION=$("$INSTALL_PATH" --version | awk '{print $NF}')
-    if [ "$CURRENT_VERSION" == "$TAG" ]; then
+    if [ "$CURRENT_VERSION" == "$TAG.0" ]; then
         echo "Already up to date (version $CURRENT_VERSION)."
         exit 0
     fi
