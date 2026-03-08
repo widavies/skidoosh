@@ -13,6 +13,8 @@ public partial class Hardware {
     private Task? _task;
     private CancellationTokenSource? _cts;
 
+    private static Lock _ledLock = new(); 
+    
     /// <summary>
     /// Call immediately when the program starts.
     ///
@@ -201,8 +203,8 @@ public partial class Hardware {
         
         float b = Math.Clamp(brightness, 0f, 1f);
         for(int i = 0; i < length; i++) {
-            uint g = (data[i] >> 16) & 0xFF;
-            uint r = (data[i] >> 8) & 0xFF;
+            uint g = data[i] >> 16 & 0xFF;
+            uint r = data[i] >> 8 & 0xFF;
             uint bl = data[i] & 0xFF;
             g = (byte) (g * b);
             r = (byte) (r * b);
@@ -210,7 +212,9 @@ public partial class Hardware {
             data[i] = g << 16 | r << 8 | bl;
         }
 
-        updateLeds(data, length);
+        lock (_ledLock) {
+            updateLeds(data, length);
+        }
     }
 }
 
