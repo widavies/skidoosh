@@ -18,11 +18,11 @@ await hardware.Init();
 if (args is ["--test-leds"]) {
     await hardware.SetLEDsLoading(false);
     hardware.SetLEDs([Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Blue,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green]);
-    await Task.Delay(5000);
+    await Task.Delay(15000);
     hardware.SetLEDs([Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Blue,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green]);
-    await Task.Delay(5000);
+    await Task.Delay(15000);
     hardware.SetLEDs([Color.Blue,Color.Green,Color.Blue,Color.Green,Color.Blue,Color.Green,Color.Blue,Color.Green,Color.Blue,Color.Green,Color.Blue,Color.Green,Color.Blue,Color.Green,Color.Blue,Color.Green]);
-    await Task.Delay(5000);
+    await Task.Delay(15000);
     hardware.SetLEDs([Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Blue,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green]);
     return;
 }

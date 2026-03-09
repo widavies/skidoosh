@@ -37,14 +37,21 @@ public partial class Hardware {
     /// </summary>
     public virtual async Task SetLEDsLoading(bool on) {
         if(_cts != null) {
-            await _cts.CancelAsync();
-            if(_task != null) {
-                await _task;
-                _task = null;
-            }
+            try
+            {
+                await _cts.CancelAsync();
+                if (_task != null)
+                {
+                    await _task;
+                    _task = null;
+                }
 
-            _cts.Dispose();
-            _cts = null;
+                _cts.Dispose();
+                _cts = null;
+            } catch(Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
 
         // Start a background job that continuously updates
