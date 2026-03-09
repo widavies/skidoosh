@@ -116,6 +116,7 @@ public partial class Hardware {
             encoded[i] = (uint) (colors[i].g << 16 | colors[i].r << 8 | colors[i].b);
         }
 
+        Console.WriteLine("Setting LEDs: " + string.Join(", ", colors));
         UpdateLEDs(encoded, encoded.Length);
     }
 
