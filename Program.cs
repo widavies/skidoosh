@@ -117,10 +117,6 @@ while(true) {
             if(colors.Any(c => !c.IsOff)) {
                 consecutiveLiftReportErrors = 0;
                 await hardware.SetLEDsLoading(false);
-                hardware.SetLEDs([]);
-                Thread.Sleep(250);
-                hardware.SetLEDs(colors);
-                Thread.Sleep(250);
                 hardware.SetLEDs(colors);
             }
             // Otherwise, there's a failure
