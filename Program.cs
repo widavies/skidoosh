@@ -15,6 +15,18 @@ Hardware hardware = new Hardware();
 
 await hardware.Init();
 
+if (args is ["--test-leds"]) {
+    hardware.SetLEDs([Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Blue,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green]);
+    await Task.Delay(5000);
+    hardware.SetLEDs([Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Blue,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green]);
+    await Task.Delay(5000);
+    hardware.SetLEDs([Color.Blue,Color.Green,Color.Blue,Color.Green,Color.Blue,Color.Green,Color.Blue,Color.Green,Color.Blue,Color.Green,Color.Blue,Color.Green,Color.Blue,Color.Green,Color.Blue,Color.Green]);
+    await Task.Delay(5000);
+    hardware.SetLEDs([Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Blue,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green,Color.Green]);
+    return;
+}
+
+
 if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
     // Register the SIGTERM handler on non-Windows platforms
     PosixSignalRegistration.Create(PosixSignal.SIGTERM, _ => {
